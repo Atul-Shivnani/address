@@ -23,7 +23,7 @@ app.post("/submission", async (req, res) => {
     }
 
     try {
-        const existing = await prisma.user.findUnique({
+        const existing = await prisma.user.findFirst({
             where: {
                 email: userData.email
             }
