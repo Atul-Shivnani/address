@@ -19,7 +19,7 @@ model User {
   email     String    @unique
   name      String?
   phone     String
-  address   Address[]
+  address   Address[] 
 }
 
 model Address {
@@ -31,5 +31,5 @@ model Address {
   state     String
   zip       String
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

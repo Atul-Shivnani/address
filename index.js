@@ -73,6 +73,96 @@ app.post("/submission", async (req, res) => {
     }
 });
 
+app.get("/users", async (req, res)=>{
+    const users = await prisma.user.findMany()
+    console.log(users)
+    res.send(users)
+})
+
+app.get("/user/:id",async (req, res)=>{
+    const id = parseInt(req.params.id, 10);
+    const user = await prisma.user.findUnique({
+        where:{
+            id:id
+        },
+        include:{
+            address:true
+        }
+    })
+    res.send(user)
+})
+
+app.delete("/delete/:id",async (req, res)=>{
+    const id = parseInt(req.params.id, 10);
+    try{
+        const response = await prisma.user.delete({
+            where:{
+                id:id
+            }
+        })
+        res.json({
+            state: "Deleted Successfully",
+            msg: "User and address deleted successfully from the database",
+        });
+    }catch(e){
+        console.error("Error:", e);
+            res.status(500).json({
+                state: "error",
+                msg: `DB/Server error: ${e.message}`
+            });
+    }
+  
+})
+
+app.put("/user/:id", async (req, res) => {
+    const { userData, addressData } = req.body;
+    const id = parseInt(req.params.id, 10);
+    console.log("id: "+id +" userdata: "+userData+" address: "+addressData)
+    try {
+        // Use a transaction to update both the user and address
+        const response = await prisma.$transaction([
+            prisma.user.update({
+                where: {
+                    id: id,
+                },
+                data: {
+                    // Directly assign the fields of the user
+                    name: userData.name,
+                    email: userData.email,
+                    phone: userData.phone,
+                    // Add any other user fields here
+                },
+            }),
+            prisma.address.update({
+                where: {
+                    id: addressData.id, // Assuming userId is the foreign key in the address table
+                },
+                data: {
+                    // Directly assign the fields of the address
+                    address1: addressData.address1,
+                    address2: addressData.address2,
+                    city: addressData.city,
+                    state: addressData.state,
+                    zip: addressData.zip,
+                },
+            }),
+        ]);
+
+        res.json({
+            state: "Updated",
+            msg: "User and address details updated successfully",
+            updatedData: response,
+        });
+    } catch (e) {
+        console.error("Error:", e);
+        res.status(500).json({
+            state: "error",
+            msg: `DB/Server error: ${e.message}`,
+        });
+    }
+});
+
+
 app.listen(3001, () => {
     console.log("Server started on port 3001");
 });
